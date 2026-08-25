@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Constellation — Research Knowledge Graph for the University Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0D1017; --surface:#161B29; --surface-2:#1E2438; --raised:#242B44;
+  --ink:#EEEAE0; --ink-dim:#8D95AB; --ink-faint:#5A6178;
+  --hairline:#262E45; --hairline-soft:#1B2135;
+  --brass:#D3AC57; --brass-soft:#8A6E32; --brass-glow:rgba(211,172,87,0.35);
+  --teal:#5FA895; --dustyblue:#84A6CC; --rust:#CC6650;
+  --radius:4px;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;-webkit-font-smoothing:antialiased;}
+::selection{background:var(--brass);color:#0D1017;}
+a{color:inherit;}
+.wrap{max-width:1240px;margin:0 auto;padding:0 40px;}
+@media(max-width:800px){.wrap{padding:0 20px;}}
+h1,h2,h3{font-family:'Newsreader',serif;font-weight:500;margin:0;}
+.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--brass);}
+.mono{font-family:'IBM Plex Mono',monospace;}
+
+/* ---------- nav ---------- */
+nav{position:sticky;top:0;z-index:50;background:rgba(13,16,23,0.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--hairline-soft);}
+.navrow{display:flex;align-items:center;justify-content:space-between;padding:18px 40px;max-width:1240px;margin:0 auto;}
+.logo{display:flex;align-items:baseline;gap:9px;font-family:'Newsreader',serif;font-size:19px;font-style:italic;color:var(--ink);}
+.logo b{font-style:normal;font-weight:500;color:var(--brass);}
+.navlinks{display:flex;gap:30px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:0.5px;color:var(--ink-dim);}
+.navlinks a{text-decoration:none;transition:color .15s;}
+.navlinks a:hover{color:var(--brass);}
+.navstatus{display:flex;align-items:center;gap:7px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal);}
+.navdot{width:6px;height:6px;border-radius:50%;background:var(--teal);animation:pulse 1.8s infinite ease-in-out;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.45;}}
+@media(max-width:800px){.navlinks{display:none;}}
+
+/* ---------- hero ---------- */
+.hero{position:relative;padding:88px 0 60px;border-bottom:1px solid var(--hairline-soft);overflow:hidden;}
+.hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center;}
+@media(max-width:940px){.hero-grid{grid-template-columns:1fr;}}
+.hero h1{font-size:44px;line-height:1.16;letter-spacing:-0.3px;margin:16px 0 22px;}
+.hero h1 em{font-style:italic;color:var(--brass);}
+.hero p.lede{font-size:16px;line-height:1.65;color:var(--ink-dim);max-width:480px;margin:0 0 30px;}
+.cta-row{display:flex;gap:14px;align-items:center;flex-wrap:wrap;}
+.btn{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.5px;padding:13px 22px;border-radius:var(--radius);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:all .18s;}
+.btn-primary{background:var(--brass);color:#161207;border:1px solid var(--brass);font-weight:600;}
+.btn-primary:hover{background:#E3BE6B;box-shadow:0 0 0 4px var(--brass-glow);}
+.btn-ghost{border:1px solid var(--hairline);color:var(--ink-dim);}
+.btn-ghost:hover{border-color:var(--ink-dim);color:var(--ink);}
+
+.hero-visual{position:relative;height:400px;border:1px solid var(--hairline);border-radius:6px;background:radial-gradient(ellipse at 60% 30%, rgba(211,172,87,0.06), transparent 60%), var(--surface);overflow:hidden;}
+.hero-visual svg{width:100%;height:100%;}
+.hero-callout{position:absolute;background:rgba(22,27,41,0.94);border:1px solid var(--brass-soft);border-radius:var(--radius);padding:9px 13px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--brass);opacity:0;pointer-events:none;transition:opacity .5s;white-space:nowrap;}
+
+.stat-strip{margin-top:56px;border-top:1px solid var(--hairline-soft);padding-top:30px;display:grid;grid-template-columns:repeat(4,1fr);gap:24px;}
+@media(max-width:800px){.stat-strip{grid-template-columns:repeat(2,1fr);}}
+.stat b{display:block;font-family:'Newsreader',serif;font-size:30px;font-weight:500;color:var(--ink);}
+.stat span{font-size:11.5px;color:var(--ink-faint);}
+.demo-flag{margin-top:14px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-faint);}
+
+/* ---------- section shared ---------- */
+section{padding:80px 0;border-bottom:1px solid var(--hairline-soft);}
+.section-head{margin-bottom:44px;max-width:640px;}
+.section-head h2{font-size:30px;margin:10px 0 12px;}
+.section-head p{color:var(--ink-dim);font-size:14.5px;line-height:1.6;}
+
+/* ---------- demo dashboard ---------- */
+.demo-shell{border:1px solid var(--hairline);border-radius:6px;overflow:hidden;background:var(--surface);}
+.demo-topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--hairline);background:var(--surface-2);}
+.demo-topbar .dots{display:flex;gap:6px;}
+.demo-topbar .dots i{width:8px;height:8px;border-radius:50%;background:var(--hairline);}
+.demo-topbar .label{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-faint);}
+.demo-layout{display:grid;grid-template-columns:250px 1fr 320px;min-height:560px;}
+@media(max-width:1000px){.demo-layout{grid-template-columns:1fr;}}
+.dcol{border-right:1px solid var(--hairline);padding:20px;overflow-y:auto;max-height:640px;}
+.dcol:last-child{border-right:none;}
+.dlabel{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--brass);margin:0 0 12px;}
+input[type=text]{width:100%;background:var(--raised);border:1px solid var(--hairline);color:var(--ink);padding:10px 12px;border-radius:var(--radius);font-family:'IBM Plex Sans',sans-serif;font-size:13px;}
+input[type=text]:focus{outline:none;border-color:var(--brass-soft);}
+.chip-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;}
+.chip{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:5px 9px;border-radius:20px;border:1px solid var(--hairline);color:var(--ink-faint);cursor:pointer;user-select:none;transition:all .15s;}
+.chip.active{border-color:var(--brass);color:var(--brass);background:rgba(211,172,87,0.08);}
+.upload-box{margin-top:26px;border:1px dashed var(--hairline);border-radius:var(--radius);padding:16px;text-align:center;color:var(--ink-faint);font-size:11.5px;cursor:pointer;transition:.15s;}
+.upload-box:hover{border-color:var(--brass-soft);color:var(--ink-dim);}
+.recent-list{margin-top:24px;display:flex;flex-direction:column;gap:9px;}
+.recent-item{font-size:11.5px;color:var(--ink-faint);display:flex;justify-content:space-between;gap:8px;padding-bottom:8px;border-bottom:1px solid var(--hairline-soft);}
+.recent-item b{color:var(--ink-dim);font-weight:500;}
+.recent-item .tag{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--teal);white-space:nowrap;}
+
+.graph-col{display:flex;flex-direction:column;padding:0;}
+.graph-head{padding:16px 20px 0;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+.graph-head h4{font-family:'Newsreader',serif;font-size:16px;font-weight:500;margin:0 0 3px;}
+.graph-head p{margin:0;color:var(--ink-faint);font-size:11.5px;}
+.rescan-btn{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--brass);border:1px solid var(--brass-soft);padding:6px 11px;border-radius:20px;cursor:pointer;white-space:nowrap;background:none;}
+.rescan-btn:hover{background:rgba(211,172,87,0.08);}
+#graphSvg{width:100%;flex:1;min-height:460px;}
+.legend{padding:0 20px 16px;display:flex;gap:16px;flex-wrap:wrap;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-faint);}
+.legend span{display:inline-flex;align-items:center;gap:6px;}
+.legend .sw{width:13px;height:2px;display:inline-block;}
+
+.tabs{display:flex;gap:2px;margin-bottom:16px;}
+.tab{flex:1;text-align:center;padding:8px 4px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.4px;text-transform:uppercase;color:var(--ink-faint);cursor:pointer;border-bottom:2px solid var(--hairline);}
+.tab.active{color:var(--brass);border-color:var(--brass);}
+.icard{background:var(--raised);border:1px solid var(--hairline);border-radius:var(--radius);padding:13px;margin-bottom:11px;}
+.icard .names{font-size:12.5px;margin-bottom:8px;line-height:1.5;}
+.icard .names b{font-weight:500;}
+.icard .vs{color:var(--ink-faint);font-style:italic;font-family:'Newsreader',serif;margin:0 5px;}
+.meter-row{display:flex;align-items:center;gap:8px;}
+.meter{flex:1;height:4px;background:var(--hairline);border-radius:2px;overflow:hidden;}
+.meter i{display:block;height:100%;}
+.iscore{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--ink-faint);white-space:nowrap;}
+.icard.collab .meter i{background:var(--dustyblue);}
+.icard.redundant .meter i{background:var(--rust);}
+.icard .why{font-size:10.5px;color:var(--ink-faint);margin-top:8px;line-height:1.5;}
+.node-detail .kicker{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--brass);text-transform:uppercase;letter-spacing:1px;}
+.node-detail h3{font-family:'Newsreader',serif;font-size:19px;margin:4px 0 10px;font-weight:500;}
+.node-detail .row{display:flex;justify-content:space-between;font-size:11.5px;padding:7px 0;border-bottom:1px solid var(--hairline-soft);color:var(--ink-faint);gap:10px;}
+.node-detail .row b{color:var(--ink-dim);font-weight:400;text-align:right;}
+.empty-hint{color:var(--ink-faint);font-size:12px;line-height:1.6;}
+
+/* ---------- methodology ---------- */
+.method-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;}
+@media(max-width:800px){.method-grid{grid-template-columns:1fr;}}
+.method-card{border:1px solid var(--hairline);border-radius:6px;padding:28px;background:var(--surface);position:relative;}
+.method-card .kicker{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:1px;text-transform:uppercase;}
+.method-card.collab .kicker{color:var(--dustyblue);}
+.method-card.redundant .kicker{color:var(--rust);}
+.method-card h3{font-size:21px;margin:10px 0 14px;}
+.method-card p{color:var(--ink-dim);font-size:13.5px;line-height:1.7;margin:0 0 16px;}
+.method-card code{display:block;background:var(--raised);border:1px solid var(--hairline);border-radius:var(--radius);padding:12px 14px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--teal);overflow-x:auto;white-space:pre;line-height:1.6;}
+
+/* ---------- architecture ---------- */
+.pipeline{display:flex;align-items:stretch;gap:0;overflow-x:auto;padding-bottom:8px;}
+.pnode{flex:0 0 168px;border:1px solid var(--hairline);border-radius:6px;background:var(--surface);padding:16px;position:relative;}
+.pnode .pk{font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--brass);letter-spacing:0.8px;text-transform:uppercase;}
+.pnode h4{font-family:'Newsreader',serif;font-size:15.5px;font-weight:500;margin:6px 0 8px;}
+.pnode p{font-size:11px;color:var(--ink-faint);line-height:1.55;margin:0;}
+.parrow{flex:0 0 34px;display:flex;align-items:center;justify-content:center;color:var(--ink-faint);font-size:16px;}
+.stack-chips{display:flex;gap:10px;margin-top:36px;flex-wrap:wrap;}
+.stack-chip{display:flex;align-items:center;gap:8px;border:1px solid var(--hairline);border-radius:20px;padding:8px 14px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-dim);}
+.stack-chip i{width:6px;height:6px;border-radius:50%;background:var(--brass);}
+
+footer{padding:44px 0;}
+.foot-row{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;}
+.foot-row .mono{font-size:11px;color:var(--ink-faint);}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="navrow">
+    <div class="logo"><span>the</span><b>Constellation</b></div>
+    <div class="navlinks">
+      <a href="#overview">Overview</a>
+      <a href="#demo">Live Graph</a>
+      <a href="#method">Detection</a>
+      <a href="#architecture">Architecture</a>
+    </div>
+    <div class="navstatus"><span class="navdot"></span>DEMO MODE</div>
+  </div>
+</nav>
+
+<!-- ============ HERO ============ -->
+<header class="hero" id="overview">
+  <div class="wrap">
+    <div class="hero-grid">
+      <div>
+        <p class="eyebrow">Knowledge graph for the university research portal</p>
+        <h1>Somewhere on campus, two labs are<br>solving <em>the same problem</em> — three<br>hops apart, and neither knows it.</h1>
+        <p class="lede">Constellation reads every PDF, markdown note, and code repository the portal ingests, extracts who's studying what with Vertex AI, and writes it into a live graph in AlloyDB — so the collaborations and duplicated effort hiding in plain sight surface automatically, in minutes instead of years.</p>
+        <div class="cta-row">
+          <a href="#demo" class="btn btn-primary">Explore the live graph ↓</a>
+          <a href="#architecture" class="btn btn-ghost">See the architecture</a>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <svg id="heroSvg" viewBox="0 0 560 400"></svg>
+        <div class="hero-callout" id="heroCallout">↔ hidden collaboration · 0.88 similarity</div>
+      </div>
+    </div>
+
+    <div class="stat-strip">
+      <div class="stat"><b id="statDocs">0</b><span>documents ingested (demo corpus)</span></div>
+      <div class="stat"><b id="statCollab">0</b><span>hidden collaborations surfaced</span></div>
+      <div class="stat"><b id="statRedundant">0</b><span>redundant studies flagged</span></div>
+      <div class="stat"><b>&lt;60s</b><span>from upload to graph write</span></div>
+    </div>
+    <p class="demo-flag">※ Stats and graph on this page are illustrative sample data, not a live connection to a university portal — see Architecture for what a production deployment looks like.</p>
+  </div>
+</header>
+
+<!-- ============ LIVE DEMO ============ -->
+<section id="demo">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Try it</p>
+      <h2>The graph, live</h2>
+      <p>A working slice of the real product: search, filter by entity type, click any node for its full provenance, and re-run the detection scan to watch hidden connections get flagged.</p>
+    </div>
+
+    <div class="demo-shell">
+      <div class="demo-topbar">
+        <div class="dots"><i></i><i></i><i></i></div>
+        <span class="label mono">constellation.university.edu/graph</span>
+        <span class="label mono" style="color:var(--teal)">● connected</span>
+      </div>
+      <div class="demo-layout">
+        <div class="dcol">
+          <p class="dlabel">Search the graph</p>
+          <input type="text" id="searchInput" placeholder="e.g. federated learning, Okafor…" oninput="onSearch(this.value)">
+          <div class="chip-row" id="typeFilters"></div>
+          <div class="upload-box" onclick="simulateUpload()">⇪ Drop a PDF, .md file, or repo URL</div>
+          <p class="dlabel" style="margin-top:26px;">Recent ingests</p>
+          <div class="recent-list" id="recentList"></div>
+        </div>
+
+        <div class="dcol graph-col">
+          <div class="graph-head">
+            <div>
+              <h4 id="graphTitle">Full neighborhood — 3 departments</h4>
+              <p id="graphSub">Click a node to inspect it</p>
+            </div>
+            <button class="rescan-btn" onclick="runScan()">↻ Re-run detection scan</button>
+          </div>
+          <svg id="graphSvg" viewBox="0 0 760 640"></svg>
+          <div class="legend">
+            <span><i class="sw" style="background:var(--teal)"></i>authored / studies / uses</span>
+            <span><i class="sw" style="background:var(--brass);border-top:2px dashed var(--brass);height:0;"></i>hidden collaboration</span>
+            <span><i class="sw" style="background:var(--rust);border-top:2px dashed var(--rust);height:0;"></i>redundant study</span>
+          </div>
+        </div>
+
+        <div class="dcol">
+          <div class="tabs">
+            <div class="tab active" data-tab="collab">Hidden Collab</div>
+            <div class="tab" data-tab="redundant">Redundant</div>
+            <div class="tab" data-tab="detail">Node</div>
+          </div>
+          <div id="tabContent"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ METHODOLOGY ============ -->
+<section id="method">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">How detection works</p>
+      <h2>Two signals, one pgvector query each</h2>
+      <p>No separate graph database and no separate vector database — AlloyDB's pgvector extension does both the traversal and the similarity math, so each detector below is one SQL query against the live graph.</p>
+    </div>
+    <div class="method-grid">
+      <div class="method-card collab">
+        <p class="kicker">Signal 01 — Latent collaboration</p>
+        <h3>People who should have met by now</h3>
+        <p>Two researchers with no <code style="display:inline;padding:1px 5px;">COLLABORATES_WITH</code> edge and no shared paper, but whose <code style="display:inline;padding:1px 5px;">STUDIES_TOPIC</code> / <code style="display:inline;padding:1px 5px;">USES_METHOD</code> embeddings land within cosine 0.82 of the same node cluster — surfaced as an introduction worth making.</p>
+        <code>SELECT a.person_id, b.person_id
+FROM person_topic a JOIN person_topic b
+  ON a.topic_id = b.topic_id
+ AND a.person_id &lt; b.person_id
+WHERE NOT EXISTS (...COLLABORATES_WITH...)
+GROUP BY a.person_id, b.person_id
+HAVING COUNT(*) &gt;= 2;</code>
+      </div>
+      <div class="method-card redundant">
+        <p class="kicker">Signal 02 — Redundant effort</p>
+        <h3>Studies running in parallel, unaware</h3>
+        <p>Two <code style="display:inline;padding:1px 5px;">Paper</code>/<code style="display:inline;padding:1px 5px;">Repository</code> nodes whose full-document embeddings are highly similar, but with no <code style="display:inline;padding:1px 5px;">CITES</code> edge between them — a candidate duplicate worth a five-minute human check before more budget goes in.</p>
+        <code>SELECT a.id, b.id, 1-(a.embedding&lt;=&gt;b.embedding) sim
+FROM node a JOIN node b
+  ON a.node_type = b.node_type AND a.id &lt; b.id
+WHERE 1-(a.embedding&lt;=&gt;b.embedding) &gt; 0.82
+  AND NOT EXISTS (...CITES...)
+ORDER BY sim DESC;</code>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ARCHITECTURE ============ -->
+<section id="architecture" style="border-bottom:none;">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Under the hood</p>
+      <h2>Portal to graph in one streaming pipeline</h2>
+      <p>Three stateless Cloud Run services, wired by Eventarc and Pub/Sub, writing into a single AlloyDB instance. Nothing to keep in sync, nothing that doesn't scale to zero between ingests.</p>
+    </div>
+
+    <div class="pipeline">
+      <div class="pnode"><p class="pk">Source</p><h4>University Portal</h4><p>PDFs, markdown notes, and repo pointers land in a GCS intake bucket.</p></div>
+      <div class="parrow">→</div>
+      <div class="pnode"><p class="pk">Cloud Run</p><h4>ingest-svc</h4><p>Eventarc-triggered. Parses PDF/markdown/git, writes raw_document.</p></div>
+      <div class="parrow">→</div>
+      <div class="pnode"><p class="pk">Cloud Run</p><h4>extract-svc</h4><p>Vertex AI Gemini extracts typed entities + relations as JSON.</p></div>
+      <div class="parrow">→</div>
+      <div class="pnode"><p class="pk">Vertex AI</p><h4>text-embedding-004</h4><p>Embeds chunks and entities for resolution + similarity search.</p></div>
+      <div class="parrow">→</div>
+      <div class="pnode"><p class="pk">AlloyDB</p><h4>Postgres + pgvector</h4><p>Nodes, edges, and embeddings in one queryable graph.</p></div>
+      <div class="parrow">→</div>
+      <div class="pnode"><p class="pk">Cloud Run</p><h4>graph-api</h4><p>FastAPI — search, traversal, insights, SSE stream to this site.</p></div>
+    </div>
+
+    <div class="stack-chips">
+      <div class="stack-chip"><i></i>AlloyDB for PostgreSQL</div>
+      <div class="stack-chip"><i></i>pgvector</div>
+      <div class="stack-chip"><i></i>Vertex AI — Gemini</div>
+      <div class="stack-chip"><i></i>Vertex AI — text-embedding-004</div>
+      <div class="stack-chip"><i></i>Cloud Run</div>
+      <div class="stack-chip"><i></i>Eventarc + Pub/Sub</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-row">
+    <span class="mono">Constellation — built on AlloyDB, Vertex AI &amp; Cloud Run</span>
+    <span class="mono">Demo data shown throughout · see /infra/deploy.sh to stand up the real pipeline</span>
+  </div>
+</footer>
+
+<script>
+/* =========================================================================
+   DATA — shape mirrors the AlloyDB node/edge tables
+========================================================================= */
+const nodes = [
+  {id:'p1', type:'Person', name:'Dr. Lina Okafor', dept:'Computer Science'},
+  {id:'p2', type:'Person', name:'Dr. Marcus Feld', dept:'Statistics'},
+  {id:'p3', type:'Person', name:'Priya Nandan (PhD cand.)', dept:'Computer Science'},
+  {id:'p4', type:'Person', name:'Dr. Sofia Reyes', dept:'Bioinformatics'},
+  {id:'p5', type:'Person', name:'Tomas Berger (PhD cand.)', dept:'Statistics'},
+  {id:'t1', type:'Topic', name:'Federated Learning'},
+  {id:'t2', type:'Topic', name:'Differential Privacy'},
+  {id:'m1', type:'Method', name:'Gradient Clipping'},
+  {id:'pa1', type:'Paper', name:'"Privacy-Preserving Edge Inference"'},
+  {id:'pa2', type:'Paper', name:'"Noisy Aggregation at Scale"'},
+  {id:'r1', type:'Repository', name:'fed-clip-bench (repo)'},
+];
+const edges = [
+  {s:'p1', d:'pa1', type:'AUTHORED'}, {s:'p3', d:'pa1', type:'AUTHORED'},
+  {s:'p3', d:'r1', type:'AUTHORED'}, {s:'p2', d:'pa2', type:'AUTHORED'},
+  {s:'pa1', d:'t1', type:'STUDIES_TOPIC'}, {s:'pa1', d:'m1', type:'USES_METHOD'},
+  {s:'pa2', d:'t2', type:'STUDIES_TOPIC'}, {s:'pa2', d:'m1', type:'USES_METHOD'},
+  {s:'p4', d:'t1', type:'STUDIES_TOPIC'}, {s:'p5', d:'t2', type:'STUDIES_TOPIC'},
+  {s:'r1', d:'m1', type:'USES_METHOD'},
+];
+const hiddenCollab = [
+  {a:'Dr. Lina Okafor', b:'Dr. Sofia Reyes', score:0.88, why:'Both connect strongly to Federated Learning + Gradient Clipping, no shared paper or COLLABORATES_WITH edge, same 2-hop funding cluster.'},
+  {a:'Priya Nandan', b:'Tomas Berger', score:0.79, why:'Independently converging on differential-privacy-flavored aggregation methods across CS and Statistics.'},
+];
+const redundant = [
+  {a:'"Privacy-Preserving Edge Inference"', b:'"Noisy Aggregation at Scale"', score:0.85, why:'86% embedding overlap in method + topic space; both use gradient clipping for DP-SGD variants; no citation link between them.'},
+];
+const recent = [
+  {name:'okafor_edge_inference_v3.pdf', tag:'extracted · 2m ago'},
+  {name:'reyes_lab_readme.md', tag:'extracted · 14m ago'},
+  {name:'fed-clip-bench', tag:'cloning repo…'},
+  {name:'berger_dp_notes.md', tag:'extracted · 51m ago'},
+];
+const typeColor = {Person:'#EEEAE0', Topic:'#D3AC57', Method:'#5FA895', Paper:'#84A6CC', Repository:'#84A6CC'};
+const typeRadius = {Person:9, Topic:7, Method:6, Paper:7, Repository:7};
+
+/* =========================================================================
+   FORCE-DIRECTED LAYOUT (Fruchterman–Reingold, run synchronously then animate in)
+========================================================================= */
+function layout(nodeList, edgeList, W, H){
+  const n = nodeList.length;
+  const area = W*H, k = Math.sqrt(area/n) * 0.9;
+  nodeList.forEach(nd=>{ nd.x = W/2 + (Math.random()-0.5)*W*0.8; nd.y = H/2 + (Math.random()-0.5)*H*0.8; });
+  for(let iter=0; iter<300; iter++){
+    const disp = nodeList.map(()=>({x:0,y:0}));
+    for(let i=0;i<n;i++){
+      for(let j=i+1;j<n;j++){
+        let dx = nodeList[i].x-nodeList[j].x, dy = nodeList[i].y-nodeList[j].y;
+        let dist = Math.sqrt(dx*dx+dy*dy)||0.01;
+        const force = (k*k)/dist;
+        dx=(dx/dist)*force; dy=(dy/dist)*force;
+        disp[i].x+=dx; disp[i].y+=dy; disp[j].x-=dx; disp[j].y-=dy;
+      }
+    }
+    edgeList.forEach(e=>{
+      const a = nodeList.findIndex(x=>x.id===e.s), b = nodeList.findIndex(x=>x.id===e.d);
+      let dx = nodeList[a].x-nodeList[b].x, dy = nodeList[a].y-nodeList[b].y;
+      let dist = Math.sqrt(dx*dx+dy*dy)||0.01;
+      const force = (dist*dist)/k;
+      dx=(dx/dist)*force; dy=(dy/dist)*force;
+      disp[a].x-=dx; disp[a].y-=dy; disp[b].x+=dx; disp[b].y+=dy;
+    });
+    const temp = Math.max(1, 12*(1-iter/300));
+    nodeList.forEach((nd,i)=>{
+      let dx=disp[i].x, dy=disp[i].y, dist=Math.sqrt(dx*dx+dy*dy)||0.01;
+      nd.x += (dx/dist)*Math.min(dist,temp);
+      nd.y += (dy/dist)*Math.min(dist,temp);
+      nd.x = Math.min(W-40, Math.max(40, nd.x));
+      nd.y = Math.min(H-40, Math.max(40, nd.y));
+    });
+  }
+}
+layout(nodes, edges, 760, 640);
+
+/* =========================================================================
+   MAIN DEMO GRAPH
+========================================================================= */
+const svg = document.getElementById('graphSvg');
+let selected = null;
+let scanRun = false;
+
+function edgePath(a,b){ return `M${a.x},${a.y} L${b.x},${b.y}`; }
+function el(tag, attrs){ const e=document.createElementNS('http://www.w3.org/2000/svg', tag); for(const k in attrs) e.setAttribute(k, attrs[k]); return e; }
+
+function draw(){
+  svg.innerHTML = '';
+  edges.forEach(e=>{
+    const a = nodes.find(n=>n.id===e.s), b = nodes.find(n=>n.id===e.d);
+    svg.appendChild(el('path', {d: edgePath(a,b), stroke:'#323B58', 'stroke-width':1.2, fill:'none'}));
+  });
+
+  if(scanRun){
+    const okafor = nodes.find(n=>n.name==='Dr. Lina Okafor'), reyes = nodes.find(n=>n.name==='Dr. Sofia Reyes');
+    const priya = nodes.find(n=>n.name.includes('Priya')), tomas = nodes.find(n=>n.name.includes('Tomas'));
+    const pa1 = nodes.find(n=>n.id==='pa1'), pa2 = nodes.find(n=>n.id==='pa2');
+    [[okafor,reyes],[priya,tomas]].forEach(([a,b])=>{
+      const p = el('path',{d:edgePath(a,b), stroke:'#D3AC57','stroke-width':1.8,'stroke-dasharray':'5,4', fill:'none', opacity:0});
+      svg.appendChild(p);
+      p.animate([{opacity:0},{opacity:0.9}], {duration:600, fill:'forwards', easing:'ease-out'});
+    });
+    const rp = el('path',{d:edgePath(pa1,pa2), stroke:'#CC6650','stroke-width':1.8,'stroke-dasharray':'2,4', fill:'none', opacity:0});
+    svg.appendChild(rp);
+    rp.animate([{opacity:0},{opacity:0.9}], {duration:600, delay:200, fill:'forwards', easing:'ease-out'});
+  }
+
+  nodes.forEach(n=>{
+    const dim = selected && !isNeighbor(n) ? 0.25 : 1;
+    const flagged = scanRun && ['Dr. Lina Okafor','Dr. Sofia Reyes','Priya Nandan (PhD cand.)','Tomas Berger (PhD cand.)'].includes(n.name);
+    const wrap = el('g', {transform:`translate(${n.x},${n.y})`, style:`cursor:pointer;opacity:${dim}`});
+    wrap.addEventListener('click', ()=>selectNode(n.id));
+    if(flagged){
+      const ring = el('circle',{r:typeRadius[n.type]+5, fill:'none', stroke:'#D3AC57','stroke-width':1, opacity:0.6});
+      wrap.appendChild(ring);
+      ring.animate([{r:typeRadius[n.type]+3, opacity:0.9},{r:typeRadius[n.type]+9, opacity:0}], {duration:1400, iterations:Infinity, easing:'ease-out'});
+    }
+    wrap.appendChild(el('circle', {r:typeRadius[n.type], fill: n.type==='Person' ? '#161B29' : typeColor[n.type],
+      stroke: typeColor[n.type], 'stroke-width': n.id===selected ? 2.5 : 1.4}));
+    const label = el('text', {x:0, y:-typeRadius[n.type]-7, 'text-anchor':'middle', fill:'#8D95AB',
+      'font-family':'IBM Plex Mono, monospace', 'font-size':'9.5'});
+    label.textContent = n.name.length>26 ? n.name.slice(0,24)+'…' : n.name;
+    wrap.appendChild(label);
+    svg.appendChild(wrap);
+  });
+}
+function isNeighbor(n){
+  if(!selected) return true;
+  if(n.id===selected) return true;
+  return edges.some(e=>(e.s===selected&&e.d===n.id)||(e.d===selected&&e.s===n.id));
+}
+function selectNode(id){
+  selected = (selected===id) ? null : id;
+  draw();
+  if(selected){ document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelector('[data-tab="detail"]').classList.add('active'); renderTab('detail'); }
+}
+function runScan(){
+  scanRun = true; draw();
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelector('[data-tab="collab"]').classList.add('active'); renderTab('collab');
+}
+
+/* ---------------- right panel ---------------- */
+function meterCard(cls, nameA, nameB, score, why){
+  return `<div class="icard ${cls}">
+    <div class="names"><b>${nameA}</b><span class="vs">↔</span><b>${nameB}</b></div>
+    <div class="meter-row"><div class="meter"><i style="width:${Math.round(score*100)}%"></i></div>
+    <span class="iscore">${score.toFixed(2)}</span></div>
+    <div class="why">${why}</div></div>`;
+}
+function renderTab(tab){
+  const c = document.getElementById('tabContent');
+  if(tab==='collab'){
+    c.innerHTML = scanRun ? hiddenCollab.map(h=>meterCard('collab', h.a, h.b, h.score, h.why)).join('')
+      : `<p class="empty-hint">Run the detection scan to surface latent collaborations from the current graph.</p>`;
+  } else if(tab==='redundant'){
+    c.innerHTML = scanRun ? redundant.map(r=>meterCard('redundant', r.a, r.b, r.score, r.why)).join('')
+      : `<p class="empty-hint">Run the detection scan to flag redundant studies from the current graph.</p>`;
+  } else {
+    const n = nodes.find(x=>x.id===selected);
+    if(!n){ c.innerHTML = `<p class="empty-hint">Click any node in the graph to inspect its edges, type, and provenance.</p>`; return; }
+    const conns = edges.filter(e=>e.s===n.id||e.d===n.id).map(e=>{
+      const otherId = e.s===n.id?e.d:e.s; const other = nodes.find(x=>x.id===otherId);
+      return `<div class="row"><span>${e.type.replace('_',' ').toLowerCase()}</span><b>${other.name}</b></div>`;
+    }).join('');
+    c.innerHTML = `<div class="node-detail"><p class="kicker">${n.type}${n.dept?' · '+n.dept:''}</p>
+      <h3>${n.name}</h3>${conns || '<p class="empty-hint">No edges yet.</p>'}</div>`;
+  }
+}
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click', ()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active'); renderTab(t.dataset.tab);
+}));
+
+/* ---------------- filters / search ---------------- */
+const types = ['Person','Paper','Repository','Topic','Method'];
+const filterWrap = document.getElementById('typeFilters');
+types.forEach(t=>{
+  const chip = document.createElement('div');
+  chip.className = 'chip active'; chip.textContent = t;
+  chip.onclick = ()=>chip.classList.toggle('active');
+  filterWrap.appendChild(chip);
+});
+function onSearch(q){
+  q = q.trim().toLowerCase();
+  document.getElementById('graphTitle').textContent = q ? `Search: "${q}"` : 'Full neighborhood — 3 departments';
+  selected = null; draw();
+  if(!q) return;
+  const match = nodes.find(n=>n.name.toLowerCase().includes(q));
+  if(match) selectNode(match.id);
+}
+
+/* ---------------- recent + simulated upload ---------------- */
+const recentList = document.getElementById('recentList');
+function paintRecent(){ recentList.innerHTML = recent.map(r=>`<div class="recent-item"><b>${r.name}</b><span class="tag">${r.tag}</span></div>`).join(''); }
+paintRecent();
+function simulateUpload(){
+  recent.unshift({name:'new_upload_'+(Math.floor(Math.random()*900)+100)+'.pdf', tag:'queued…'});
+  recent.pop(); paintRecent();
+  setTimeout(()=>{ recent[0].tag = 'extracting…'; paintRecent(); }, 1000);
+  setTimeout(()=>{ recent[0].tag = 'extracted · just now'; document.getElementById('statDocs').textContent = (parseInt(document.getElementById('statDocs').textContent)+1); paintRecent(); }, 2400);
+}
+
+/* =========================================================================
+   HERO ANIMATION — small illustrative constellation that self-assembles
+   then reveals one hidden-collaboration link
+========================================================================= */
+const heroNodes = [
+  {x:70,y:70},{x:220,y:50},{x:380,y:90},{x:480,y:180},{x:120,y:200},
+  {x:260,y:230},{x:60,y:320},{x:340,y:310},{x:460,y:320},{x:200,y:150},
+];
+const heroEdges = [[0,4],[1,9],[2,3],[4,9],[5,9],[5,7],[6,4],[7,8],[1,2]];
+const heroSvg = document.getElementById('heroSvg');
+function drawHero(revealHidden){
+  heroSvg.innerHTML='';
+  heroEdges.forEach(([a,b])=>{
+    const p = el('path',{d:edgePath(heroNodes[a],heroNodes[b]), stroke:'#323B58','stroke-width':1.1, fill:'none', opacity:0});
+    heroSvg.appendChild(p);
+    p.animate([{opacity:0},{opacity:1}],{duration:700, delay:200+Math.random()*900, fill:'forwards'});
+  });
+  heroNodes.forEach((n,i)=>{
+    const c = el('circle',{cx:n.x,cy:n.y,r:i%3===0?7:5,fill:i%4===0?'#161B29':'#5FA895',stroke:'#D3AC57','stroke-width':1,opacity:0});
+    heroSvg.appendChild(c);
+    c.animate([{opacity:0,r:0},{opacity:1,r:i%3===0?7:5}],{duration:500, delay:Math.random()*800, fill:'forwards', easing:'ease-out'});
+  });
+  if(revealHidden){
+    const a = heroNodes[6], b = heroNodes[3];
+    const p = el('path',{d:edgePath(a,b), stroke:'#D3AC57','stroke-width':1.8,'stroke-dasharray':'5,4', fill:'none', opacity:0});
+    heroSvg.appendChild(p);
+    p.animate([{opacity:0},{opacity:0.95}],{duration:900, delay:1700, fill:'forwards'});
+    setTimeout(()=>{
+      const callout = document.getElementById('heroCallout');
+      const midx = (a.x+b.x)/2, midy=(a.y+b.y)/2;
+      const rect = heroSvg.getBoundingClientRect();
+      callout.style.left = (midx/560*100)+'%';
+      callout.style.top = (midy/400*100)+'%';
+      callout.style.opacity = 1;
+    }, 2600);
+  }
+}
+drawHero(true);
+
+/* ---------------- animated stat counters ---------------- */
+function countUp(id, target, duration){
+  const startTime = performance.now();
+  function tick(now){
+    const p = Math.min(1, (now-startTime)/duration);
+    document.getElementById(id).textContent = Math.floor(p*target);
+    if(p<1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+const statObserver = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      countUp('statDocs', 128, 1400);
+      countUp('statCollab', 14, 1400);
+      countUp('statRedundant', 6, 1400);
+      statObserver.disconnect();
+    }
+  });
+}, {threshold:0.4});
+statObserver.observe(document.querySelector('.stat-strip'));
+
+/* ---------------- init ---------------- */
+draw();
+renderTab('collab');
+</script>
+</body>
+</html>
